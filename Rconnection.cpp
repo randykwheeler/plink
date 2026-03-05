@@ -583,7 +583,12 @@ int Rconnection::connect() {
 #ifdef unix
         memset(&sau,0,sizeof(sau));
         sau.sun_family=AF_LOCAL;
-        strcpy(sau.sun_path,host); // FIXME: possible overflow!
+        if (strlen(host) >= sizeof(sau.sun_path)) {
+            closesocket(s); s=-1;
+            return -1; // buffer overflow prevention
+        }
+        strncpy(sau.sun_path, host, sizeof(sau.sun_path) - 1);
+        sau.sun_path[sizeof(sau.sun_path) - 1] = '\0';
 #else
 	return -11;  // unsupported
 #endif
