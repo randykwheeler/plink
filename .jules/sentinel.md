@@ -1,0 +1,4 @@
+## 2025-03-06 - Prevent Buffer Overflow in Local Sockets
+**Vulnerability:** A classic buffer overflow vulnerability existed in `Rconnection::connect` when establishing a local Unix domain socket (AF_LOCAL). The code used `strcpy(sau.sun_path, host)` to copy an arbitrarily long host string into the fixed-size `sun_path` buffer (typically 108 bytes). This allowed for stack smashing if a malicious or overly long path was provided.
+**Learning:** Fixed-size buffers in C/C++ structures like `sockaddr_un` are prime targets for overflow vulnerabilities when handling external input. The original code even had a `// FIXME` comment acknowledging the risk.
+**Prevention:** Always use safe string copy functions like `strncpy` or `strlcpy` when copying into fixed-size buffers, and explicitly ensure null-termination (e.g., `sau.sun_path[sizeof(sau.sun_path)-1] = '\0'`).
