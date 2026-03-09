@@ -1,0 +1,4 @@
+## 2024-05-24 - [CRITICAL] Prevented Buffer Overflow in Rconnection Connect Method
+**Vulnerability:** A `strcpy(sau.sun_path, host);` operation in `Rconnection::connect()` was vulnerable to stack buffer overflow when the `host` string length exceeded the UNIX domain socket path buffer size.
+**Learning:** Legacy networking code dealing with `sockaddr_un` structs often uses unsafe string functions like `strcpy`. These structs have fixed-size arrays (usually 108 bytes on Linux for `sun_path`), which are susceptible to overflow if bounds checking is not explicitly implemented.
+**Prevention:** Always use length-checked functions like `strncpy`, ensuring that strings are properly null-terminated after the copy, and perform bounds checking returning appropriate error codes before attempting the copy.
