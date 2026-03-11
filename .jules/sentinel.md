@@ -1,0 +1,4 @@
+## 2024-05-27 - [CRITICAL] Heap Buffer Overflow in Rconnection login
+**Vulnerability:** The `login` function in `Rconnection.cpp` uses `crypt()` but fails to check its return value for `NULL` and uses a fixed-size buffer allocation based on input length, but copies the `crypt()` output without checking its length, leading to a heap buffer overflow.
+**Learning:** Functions like `crypt()` return a string of varying lengths depending on the algorithm and salt, and can return `NULL` on error. Dynamically sizing memory *before* getting the length of the string to append is dangerous.
+**Prevention:** Always check `crypt()` for `NULL` returns. Calculate required memory allocation by running the functions that return lengths first, or use dynamic memory structures (like `std::string` in C++) to automatically resize buffers.
