@@ -23,10 +23,10 @@
 /* #undef HAVE_LIBGCC */
 
 /* Define to 1 if you have the `gomp' library (-lgomp). */
-#define HAVE_LIBGOMP 1
+/* #undef HAVE_LIBGOMP */
 
 /* Define to 1 if you have the `lapack' library (-llapack). */
-#define HAVE_LIBLAPACK 1
+/* #undef HAVE_LIBLAPACK */
 
 /* Define to 1 if you have the `nsl' library (-lnsl). */
 /* #undef HAVE_LIBNSL */
@@ -38,7 +38,7 @@
 #define HAVE_LIBZ 1
 
 /* Define to 1 if you have the <memory.h> header file. */
-#define HAVE_MEMORY_H 1
+/* #undef HAVE_MEMORY_H */
 
 /* Define to 1 if you have the `memset' function. */
 #define HAVE_MEMSET 1
@@ -115,7 +115,7 @@
 
 /* Define to 1 if `major', `minor', and `makedev' are declared in
    <sysmacros.h>. */
-/* #undef MAJOR_IN_SYSMACROS */
+#define MAJOR_IN_SYSMACROS 1
 
 /* Name of package */
 #define PACKAGE "plink"
