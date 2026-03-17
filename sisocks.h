@@ -75,9 +75,13 @@ int snprintf(char *buf, int len, char *fmt, ...)
    va_list argptr;
    int cnt;
 
+   if (len <= 0) return 0;
+
    va_start(argptr, fmt);
-   cnt = vsprintf(buf, fmt, argptr);
+   cnt = _vsnprintf(buf, len, fmt, argptr);
    va_end(argptr);
+
+   buf[len - 1] = 0;
 
    return(cnt);
 }
@@ -125,25 +129,21 @@ int sockerrorchecks(char *buf, int blen, int res) {
   *buf=0;
   if (res==-1) {
     switch(sockerrno) {
-    case EBADF: strncpy(buf,"bad descriptor",blen); break;
-    case EINVAL: strncpy(buf,"already in use",blen); break;
-    case EACCES: strncpy(buf,"access denied",blen); break;
-    case ENOTSOCK: strncpy(buf,"descriptor is not a socket",blen); break;
-    case EOPNOTSUPP: strncpy(buf,"operation not supported",blen); break;
-    case EFAULT: strncpy(buf,"fault",blen); break;
-    case EWOULDBLOCK: strncpy(buf,"operation would block",blen); break;
-    case EISCONN: strncpy(buf,"is already connected",blen); break;
-    case ECONNREFUSED: strncpy(buf,"connection refused",blen); break;
-    case ETIMEDOUT: strncpy(buf,"operation timed out",blen); break;
-    case ENETUNREACH: strncpy(buf,"network is unreachable",blen); break;
-    case EADDRINUSE: strncpy(buf,"address already in use",blen); break;
-    case EINPROGRESS: strncpy(buf,"in progress",blen); break;
-    case EALREADY: strncpy(buf,"previous connect request not completed yet",blen); break;
-#ifdef unix
+    case EBADF: snprintf(buf,blen,"bad descriptor"); break;
+    case EINVAL: snprintf(buf,blen,"already in use"); break;
+    case EACCES: snprintf(buf,blen,"access denied"); break;
+    case ENOTSOCK: snprintf(buf,blen,"descriptor is not a socket"); break;
+    case EOPNOTSUPP: snprintf(buf,blen,"operation not supported"); break;
+    case EFAULT: snprintf(buf,blen,"fault"); break;
+    case EWOULDBLOCK: snprintf(buf,blen,"operation would block"); break;
+    case EISCONN: snprintf(buf,blen,"is already connected"); break;
+    case ECONNREFUSED: snprintf(buf,blen,"connection refused"); break;
+    case ETIMEDOUT: snprintf(buf,blen,"operation timed out"); break;
+    case ENETUNREACH: snprintf(buf,blen,"network is unreachable"); break;
+    case EADDRINUSE: snprintf(buf,blen,"address already in use"); break;
+    case EINPROGRESS: snprintf(buf,blen,"in progress"); break;
+    case EALREADY: snprintf(buf,blen,"previous connect request not completed yet"); break;
     default: snprintf(buf,blen,"unknown socket error %d",sockerrno);
-#else
-    default: sprintf(buf,"unknown socket error %d",sockerrno);
-#endif
     }
   }
   return res;
