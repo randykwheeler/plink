@@ -1,0 +1,4 @@
+## 2024-05-14 - Fix Heap Buffer Overflow in Rconnection Authentication
+**Vulnerability:** The `login` function in `Rconnection.cpp` pre-allocated a fixed buffer for authentication credentials (`authbuf`) and copied the return value of `crypt` into it. If `crypt` returned a string longer than anticipated, or `NULL` (which would crash `strcpy`), it caused a heap buffer overflow or segfault.
+**Learning:** Never assume the length of cryptographically generated strings or assume functions like `crypt` will always return a valid pointer.
+**Prevention:** Always dynamically calculate the required buffer size based on the *actual* output length of `crypt`, and always check for `NULL` returns before dereferencing or copying.
