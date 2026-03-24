@@ -583,6 +583,9 @@ int Rconnection::connect() {
 #ifdef unix
         memset(&sau,0,sizeof(sau));
         sau.sun_family=AF_LOCAL;
+        if (strlen(host) >= sizeof(sau.sun_path)) {
+            return CERR_connect_failed; // prevent buffer overflow
+        }
         strcpy(sau.sun_path,host); // FIXME: possible overflow!
 #else
 	return -11;  // unsupported
@@ -827,13 +830,32 @@ int Rconnection::removeFile(const char *fn) {
 int Rconnection::login(const char *user, const char *pwd) {
   char *authbuf, *c;
   if (!(auth&A_required)) return 0;
-  authbuf=(char*) malloc(strlen(user)+strlen(pwd)+22);
+
+  // Determine needed buffer size safely
+  size_t buf_len = strlen(user) + strlen(pwd) + 22;
+#ifdef unix
+  char *crypted = NULL;
+  if (auth & A_crypt) {
+    crypted = crypt(pwd, salt);
+    if (crypted) {
+      buf_len += strlen(crypted);
+    }
+  }
+#endif
+
+  authbuf=(char*) malloc(buf_len);
   strcpy(authbuf, user); c=authbuf+strlen(user);
   *c='\n'; c++;
   strcpy(c,pwd);
 #ifdef unix
-  if (auth&A_crypt)
-    strcpy(c,crypt(pwd,salt));
+  if (auth&A_crypt) {
+    if (crypted) {
+        strcpy(c, crypted);
+    } else {
+        free(authbuf);
+        return CERR_connect_failed;
+    }
+  }
 #else
   if (!(auth&A_plain)) {
     free(authbuf);
