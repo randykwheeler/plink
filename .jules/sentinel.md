@@ -1,0 +1,4 @@
+## 2024-03-24 - [Fix buffer overflows]
+**Vulnerability:** Several unverified string copy operations such as `sprintf`, `strcpy`, and dynamic unverified bounds in dynamic memory allocations during `Rconnection` login and connection initialization, potentially resulting in stack and heap buffer overflows.
+**Learning:** Legacy codebase patterns often assumed sufficient memory allocation and ignored string bounds and null-termination variations. Specifically, when handling network and socket operations (e.g., `sizeof(sau.sun_path)` length and MSVC `_vsnprintf` null-termination behavior).
+**Prevention:** Systematically enforce length checks before `strcpy`, replacing all instances of `sprintf` and `vsprintf` with `snprintf` and `vsnprintf`. Ensure cross-platform implementations guarantee safety and correct null-termination. Ensure `malloc` dynamic calculations utilize actual output string lengths.
