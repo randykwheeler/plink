@@ -1,0 +1,4 @@
+## 2024-05-09 - [Heap Buffer Overflow in Rconnection::login]
+**Vulnerability:** The `Rconnection::login` function in `Rconnection.cpp` had a heap buffer overflow vulnerability. The size of the `authbuf` buffer was calculated assuming a fixed salt length (22 bytes). However, the output of `crypt()` could be longer. Furthermore, `crypt()` could return `NULL` on failure, leading to a segfault when `strcpy` attempted to copy from `NULL`.
+**Learning:** Never assume fixed output sizes for cryptographic functions like `crypt()`. Always compute the dynamic length of the actual output. Always check for `NULL` returns from functions like `crypt()` to avoid segfaults.
+**Prevention:** Compute the length of the string returned by `crypt()` dynamically, check for `NULL` returns, and allocate the correct amount of memory dynamically.
