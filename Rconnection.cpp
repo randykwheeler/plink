@@ -827,18 +827,27 @@ int Rconnection::removeFile(const char *fn) {
 int Rconnection::login(const char *user, const char *pwd) {
   char *authbuf, *c;
   if (!(auth&A_required)) return 0;
-  authbuf=(char*) malloc(strlen(user)+strlen(pwd)+22);
+
+#ifdef unix
+  const char *enc_pwd = pwd;
+  if (auth&A_crypt) {
+    enc_pwd = crypt(pwd, salt);
+    if (!enc_pwd) return CERR_auth_unsupported;
+  }
+  authbuf=(char*) malloc(strlen(user)+strlen(enc_pwd)+2);
+  if (!authbuf) return CERR_out_of_mem;
+  strcpy(authbuf, user); c=authbuf+strlen(user);
+  *c='\n'; c++;
+  strcpy(c,enc_pwd);
+#else
+  if (!(auth&A_plain)) {
+    return CERR_auth_unsupported;
+  }
+  authbuf=(char*) malloc(strlen(user)+strlen(pwd)+2);
+  if (!authbuf) return CERR_out_of_mem;
   strcpy(authbuf, user); c=authbuf+strlen(user);
   *c='\n'; c++;
   strcpy(c,pwd);
-#ifdef unix
-  if (auth&A_crypt)
-    strcpy(c,crypt(pwd,salt));
-#else
-  if (!(auth&A_plain)) {
-    free(authbuf);
-    return CERR_auth_unsupported;
-  }
 #endif
 
   Rmessage *msg=new Rmessage();
