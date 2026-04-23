@@ -6,3 +6,8 @@
 **Vulnerability:** A heap buffer overflow existed in `Rconnection::login()` where memory allocation for an authentication buffer assumed a maximum fixed size for the output of `crypt()` (e.g., `strlen(pwd) + 22`). Modern `crypt()` implementations (like SHA-512) can produce hashes exceeding 100 bytes, leading to a buffer overflow when blindly copied with `strcpy()`. Additionally, missing NULL checks for `malloc()` and `crypt()` could cause segmentation faults.
 **Learning:** Never assume the length of cryptographic algorithm outputs, as system defaults evolve. Always dynamically allocate memory based on the exact output length at runtime.
 **Prevention:** Call functions that produce variable-length output first, check for errors (e.g., NULL pointers), calculate the exact required buffer size dynamically using `strlen()`, and verify that memory allocation (`malloc()`) succeeds before proceeding with secure copying.
+
+## 2024-05-18 - [Fix Buffer Overflow in sisocks.h]
+**Vulnerability:** Potential buffer overflow vulnerabilities existed in `sisocks.h` due to the use of unbounded formatting functions `vsprintf` and `sprintf` for error message logging and custom `snprintf` polyfilling.
+**Learning:** Legacy codebase patterns often rely on unsafe string functions. Polyfills for standard functions (like `snprintf` on older Windows) must be carefully implemented; `_vsnprintf` on Windows does not automatically null-terminate if the buffer is full, requiring explicit null-termination for security.
+**Prevention:** Always use bounds-checked string manipulation functions like `snprintf` or `_vsnprintf` across all platforms. Ensure proper null-termination when relying on platform-specific quirks (e.g., MSVC's `_vsnprintf`).
