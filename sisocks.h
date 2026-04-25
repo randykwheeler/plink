@@ -25,6 +25,7 @@
 #include <stdio.h>
 #endif
 #include <string.h>
+#include <stdarg.h>
 
 #ifdef unix
 #include <sys/types.h>
@@ -75,14 +76,28 @@ int snprintf(char *buf, int len, char *fmt, ...)
    va_list argptr;
    int cnt;
 
+   if (len <= 0) return 0;
+
    va_start(argptr, fmt);
-   cnt = vsprintf(buf, fmt, argptr);
+#ifdef windows
+   cnt = _vsnprintf(buf, len, fmt, argptr);
+#else
+   cnt = vsnprintf(buf, len, fmt, argptr);
+#endif
    va_end(argptr);
+
+   if (cnt < 0 || cnt >= len) {
+       buf[len - 1] = '\0';
+   }
 
    return(cnt);
 }
 #else
 extern int snprintf(char *buf, int len, char *fmt, ...);
+#endif
+#else
+#ifndef snprintf
+#define snprintf _snprintf
 #endif
 #endif
 
@@ -142,7 +157,7 @@ int sockerrorchecks(char *buf, int blen, int res) {
 #ifdef unix
     default: snprintf(buf,blen,"unknown socket error %d",sockerrno);
 #else
-    default: sprintf(buf,"unknown socket error %d",sockerrno);
+    default: snprintf(buf,blen,"unknown socket error %d",sockerrno);
 #endif
     }
   }
