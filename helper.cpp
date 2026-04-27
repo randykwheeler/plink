@@ -20,6 +20,7 @@
 #include <cerrno>
 #include <cstdio>
 #include <ctime>
+#include <random>
 
 #include "helper.h"
 #include "crandom.h"
@@ -33,6 +34,11 @@
 #include "linear.h"
 
 #define FPMIN 1.0e-30
+
+unsigned long get_secure_seed() {
+    std::random_device rd;
+    return rd();
+}
 
 extern ofstream LOG;
 extern Plink * PP;
