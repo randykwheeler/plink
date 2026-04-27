@@ -37,7 +37,7 @@ using namespace std;
 PlinkHandler::PlinkHandler() {
 	// Random seed
 	if(par::random_seed == 0)
-	  CRandom::srand(time(0));
+	  CRandom::srand(get_secure_seed());
 	else
 	  CRandom::srand(par::random_seed);
 

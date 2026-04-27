@@ -23,6 +23,8 @@
 #include "plink.h"
 #include "options.h"
 
+unsigned long get_secure_seed();
+
 template<class T>
 inline const T SQR(const T a) {return a*a;}
  

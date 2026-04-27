@@ -392,7 +392,7 @@ namespace std
   template<>
     class less<Locus*> {
     public:
-    bool operator()(Locus const* p1, Locus const* p2)
+    bool operator()(Locus const* p1, Locus const* p2) const
       {
 
 	// Locus comparison based first on distance, 
