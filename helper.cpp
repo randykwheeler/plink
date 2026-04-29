@@ -20,6 +20,7 @@
 #include <cerrno>
 #include <cstdio>
 #include <ctime>
+#include <random>
 
 #include "helper.h"
 #include "crandom.h"
@@ -36,6 +37,11 @@
 
 extern ofstream LOG;
 extern Plink * PP;
+
+long unsigned get_secure_seed() {
+  std::random_device rd;
+  return static_cast<long unsigned>(rd());
+}
 
 vector<bool> nvec_bool()
 { 

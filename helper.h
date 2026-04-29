@@ -42,6 +42,8 @@ template<class T>
 inline void SWAP(T &a, T &b)
         {T dum=a; a=b; b=dum;}
 
+// Secure random seed generation using std::random_device
+long unsigned get_secure_seed();
 
 class Plink;
 class Individual;
