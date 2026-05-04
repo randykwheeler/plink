@@ -23,6 +23,7 @@
 
 #if defined SOCK_ERRORS || defined USE_SNPRINTF
 #include <stdio.h>
+#include <stdarg.h>
 #endif
 #include <string.h>
 
@@ -75,10 +76,17 @@ int snprintf(char *buf, int len, char *fmt, ...)
    va_list argptr;
    int cnt;
 
+   if (len <= 0) return 0;
+
    va_start(argptr, fmt);
-   cnt = vsprintf(buf, fmt, argptr);
+#if defined(_WIN32) || defined(WIN32) || defined(windows)
+   cnt = _vsnprintf(buf, len, fmt, argptr);
+#else
+   cnt = vsnprintf(buf, len, fmt, argptr);
+#endif
    va_end(argptr);
 
+   buf[len - 1] = '\0';
    return(cnt);
 }
 #else
@@ -139,11 +147,7 @@ int sockerrorchecks(char *buf, int blen, int res) {
     case EADDRINUSE: strncpy(buf,"address already in use",blen); break;
     case EINPROGRESS: strncpy(buf,"in progress",blen); break;
     case EALREADY: strncpy(buf,"previous connect request not completed yet",blen); break;
-#ifdef unix
     default: snprintf(buf,blen,"unknown socket error %d",sockerrno);
-#else
-    default: sprintf(buf,"unknown socket error %d",sockerrno);
-#endif
     }
   }
   return res;
