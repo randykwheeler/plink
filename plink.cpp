@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <algorithm>
 #include <cmath>
+#include <random>
 
 #include "plink.h"
 #include "options.h"
@@ -116,7 +117,7 @@ int main(int argc, char* argv[])
 
 
   if ( par::random_seed == 0 )
-    CRandom::srand(time(0));
+    CRandom::srand(std::random_device{}());
   else
     CRandom::srand( par::random_seed );
 
