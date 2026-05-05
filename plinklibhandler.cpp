@@ -24,6 +24,7 @@
 #endif
 
 #include "plinklibhandler.h"
+#include <random>
 
 // global Plink object
 Plink* PP;
@@ -37,7 +38,7 @@ using namespace std;
 PlinkHandler::PlinkHandler() {
 	// Random seed
 	if(par::random_seed == 0)
-	  CRandom::srand(time(0));
+	  CRandom::srand(std::random_device{}());
 	else
 	  CRandom::srand(par::random_seed);
 
