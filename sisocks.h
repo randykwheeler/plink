@@ -23,6 +23,7 @@
 
 #if defined SOCK_ERRORS || defined USE_SNPRINTF
 #include <stdio.h>
+#include <stdarg.h>
 #endif
 #include <string.h>
 
@@ -72,11 +73,17 @@
 #ifdef MAIN
 int snprintf(char *buf, int len, char *fmt, ...)
 {
+   if (len <= 0) return 0;
    va_list argptr;
    int cnt;
 
    va_start(argptr, fmt);
-   cnt = vsprintf(buf, fmt, argptr);
+#ifdef windows
+   cnt = _vsnprintf(buf, len, fmt, argptr);
+   buf[len - 1] = 0; // _vsnprintf does not guarantee null-termination
+#else
+   cnt = vsnprintf(buf, len, fmt, argptr);
+#endif
    va_end(argptr);
 
    return(cnt);
@@ -142,7 +149,7 @@ int sockerrorchecks(char *buf, int blen, int res) {
 #ifdef unix
     default: snprintf(buf,blen,"unknown socket error %d",sockerrno);
 #else
-    default: sprintf(buf,"unknown socket error %d",sockerrno);
+    default: snprintf(buf,blen,"unknown socket error %d",sockerrno);
 #endif
     }
   }
