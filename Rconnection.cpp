@@ -106,7 +106,7 @@ Rmessage::Rmessage(int cmd, const char *txt) {
     memset(&head,0,sizeof(head));
     int tl=strlen(txt)+1;
     if ((tl&3)>0)
-        tl=(tl+4)&0xffffc; // allign the text
+        tl=(tl+4)&~3; // align the text securely
     len=tl+4; // message length is tl + 4 (short format only)
     head.cmd=cmd&0x3f;
     head.len=len;
@@ -694,7 +694,7 @@ int Rconnection::assign(const char *symbol, Rexp *exp) {
     Rmessage *cm=new Rmessage(CMD_setSEXP);
     
     int tl=strlen(symbol)+1;
-    if (tl&3) tl=(tl+4)&0xfffc;
+    if (tl&3) tl=(tl+4)&~3;
     Rsize_t xl=exp->storageSize();
     Rsize_t hl=4+tl+4;
     if (xl>0x7fffff) hl+=4;
