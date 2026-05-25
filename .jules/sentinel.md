@@ -6,3 +6,8 @@
 **Vulnerability:** A heap buffer overflow existed in `Rconnection::login()` where memory allocation for an authentication buffer assumed a maximum fixed size for the output of `crypt()` (e.g., `strlen(pwd) + 22`). Modern `crypt()` implementations (like SHA-512) can produce hashes exceeding 100 bytes, leading to a buffer overflow when blindly copied with `strcpy()`. Additionally, missing NULL checks for `malloc()` and `crypt()` could cause segmentation faults.
 **Learning:** Never assume the length of cryptographic algorithm outputs, as system defaults evolve. Always dynamically allocate memory based on the exact output length at runtime.
 **Prevention:** Call functions that produce variable-length output first, check for errors (e.g., NULL pointers), calculate the exact required buffer size dynamically using `strlen()`, and verify that memory allocation (`malloc()`) succeeds before proceeding with secure copying.
+
+## 2024-05-23 - Fix heap buffer overflow in message text alignment
+**Vulnerability:** Integer truncation in message text alignment used hardcoded masks (`& 0xffffc` and `& 0xfffc`), which caused lengths larger than 1MB or 64KB to be truncated, leading to an under-allocated buffer and a subsequent heap buffer overflow during string copy operations.
+**Learning:** Hardcoded bitmasks for alignment can inadvertently cause severe integer truncation issues if the input string exceeds the mask's width, breaking assumptions about buffer sizing.
+**Prevention:** Always use bitwise NOT on the alignment size minus one (e.g., `& ~3` for 4-byte alignment) rather than hardcoded hex masks to prevent truncation, and ensure bounds checking handles arbitrarily large inputs.
