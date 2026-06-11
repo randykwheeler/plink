@@ -129,7 +129,9 @@ vector<string> socketConnection( Plink * P,
       
       // Give up if we encounter any problems
 
-      if ( retcode < 0 )
+      // SEC: Check for both error (<0) and orderly shutdown (0)
+      // to prevent out-of-bounds read at echoBuffer[-1]
+      if ( retcode <= 0 )
 	{
 	  P->printLOG("Problem reading from SNPServer\n");
 	  return tokens;
