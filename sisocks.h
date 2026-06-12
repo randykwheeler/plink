@@ -76,8 +76,16 @@ int snprintf(char *buf, int len, char *fmt, ...)
    int cnt;
 
    va_start(argptr, fmt);
-   cnt = vsprintf(buf, fmt, argptr);
+#ifdef _MSC_VER
+   cnt = _vsnprintf(buf, len, fmt, argptr);
+#else
+   cnt = vsnprintf(buf, len, fmt, argptr);
+#endif
    va_end(argptr);
+
+   if (len > 0 && (cnt < 0 || cnt >= len)) {
+     buf[len - 1] = 0;
+   }
 
    return(cnt);
 }
@@ -139,11 +147,7 @@ int sockerrorchecks(char *buf, int blen, int res) {
     case EADDRINUSE: strncpy(buf,"address already in use",blen); break;
     case EINPROGRESS: strncpy(buf,"in progress",blen); break;
     case EALREADY: strncpy(buf,"previous connect request not completed yet",blen); break;
-#ifdef unix
     default: snprintf(buf,blen,"unknown socket error %d",sockerrno);
-#else
-    default: sprintf(buf,"unknown socket error %d",sockerrno);
-#endif
     }
   }
   return res;
