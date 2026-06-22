@@ -76,7 +76,12 @@ int snprintf(char *buf, int len, char *fmt, ...)
    int cnt;
 
    va_start(argptr, fmt);
-   cnt = vsprintf(buf, fmt, argptr);
+#ifdef _MSC_VER
+   cnt = _vsnprintf(buf, len, fmt, argptr);
+#else
+   cnt = vsnprintf(buf, len, fmt, argptr);
+#endif
+   if (len > 0 && (cnt < 0 || cnt >= len)) buf[len - 1] = 0;
    va_end(argptr);
 
    return(cnt);
@@ -142,7 +147,7 @@ int sockerrorchecks(char *buf, int blen, int res) {
 #ifdef unix
     default: snprintf(buf,blen,"unknown socket error %d",sockerrno);
 #else
-    default: sprintf(buf,"unknown socket error %d",sockerrno);
+    default: snprintf(buf,blen,"unknown socket error %d",sockerrno);
 #endif
     }
   }
