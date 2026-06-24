@@ -129,7 +129,7 @@ vector<string> socketConnection( Plink * P,
       
       // Give up if we encounter any problems
 
-      if ( retcode < 0 )
+      if ( retcode <= 0 )
 	{
 	  P->printLOG("Problem reading from SNPServer\n");
 	  return tokens;
