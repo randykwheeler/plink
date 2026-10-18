@@ -6,3 +6,8 @@
 **Vulnerability:** A heap buffer overflow existed in `Rconnection::login()` where memory allocation for an authentication buffer assumed a maximum fixed size for the output of `crypt()` (e.g., `strlen(pwd) + 22`). Modern `crypt()` implementations (like SHA-512) can produce hashes exceeding 100 bytes, leading to a buffer overflow when blindly copied with `strcpy()`. Additionally, missing NULL checks for `malloc()` and `crypt()` could cause segmentation faults.
 **Learning:** Never assume the length of cryptographic algorithm outputs, as system defaults evolve. Always dynamically allocate memory based on the exact output length at runtime.
 **Prevention:** Call functions that produce variable-length output first, check for errors (e.g., NULL pointers), calculate the exact required buffer size dynamically using `strlen()`, and verify that memory allocation (`malloc()`) succeeds before proceeding with secure copying.
+
+## 2024-10-18 - Out-of-bounds Read in recv()
+**Vulnerability:** Out-of-bounds read due to unhandled recv() zero return value.
+**Learning:** `recv()` can return 0 to indicate an orderly shutdown. If the code does not explicitly handle this and later uses `retcode - 1` as an index, it causes an out-of-bounds read at index -1.
+**Prevention:** Always check if `recv()` returns 0 to properly handle orderly shutdowns before using the return value as an index or length for buffer operations.
