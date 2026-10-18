@@ -135,6 +135,9 @@ vector<string> socketConnection( Plink * P,
 	  return tokens;
 	}
       
+      if ( retcode == 0 )
+        break;
+
       echoBuffer[retcode] = '\0';        // Terminate the string!    
       
       all_string += echoBuffer;
