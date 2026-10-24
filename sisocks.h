@@ -76,8 +76,16 @@ int snprintf(char *buf, int len, char *fmt, ...)
    int cnt;
 
    va_start(argptr, fmt);
-   cnt = vsprintf(buf, fmt, argptr);
+#if defined(_WIN32) || defined(WIN32) || defined(windows) || defined(_WIN64)
+   cnt = _vsnprintf(buf, len, fmt, argptr);
+#else
+   cnt = vsnprintf(buf, len, fmt, argptr);
+#endif
    va_end(argptr);
+
+   if (len > 0 && (cnt < 0 || cnt >= len)) {
+       buf[len - 1] = '\0';
+   }
 
    return(cnt);
 }
