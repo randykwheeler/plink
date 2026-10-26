@@ -134,6 +134,9 @@ vector<string> socketConnection( Plink * P,
 	  P->printLOG("Problem reading from SNPServer\n");
 	  return tokens;
 	}
+
+      if ( retcode == 0 )
+	break;
       
       echoBuffer[retcode] = '\0';        // Terminate the string!    
       
