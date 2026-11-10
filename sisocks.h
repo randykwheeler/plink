@@ -7,8 +7,7 @@
      should be defined in just one file that will contain the fn definitions and variables
 
    USE_SNPRINTF 
-     emulate snprintf on Win platforms (you will
-     lose the security which is provided under unix of course)
+     emulate bounded snprintf on legacy Win platforms
 
    SOCK_ERRORS
      include error code handling and checking functions
@@ -23,6 +22,7 @@
 
 #if defined SOCK_ERRORS || defined USE_SNPRINTF
 #include <stdio.h>
+#include <stdarg.h>
 #endif
 #include <string.h>
 
@@ -70,20 +70,26 @@
 
 #ifdef USE_SNPRINTF
 #ifdef MAIN
-int snprintf(char *buf, int len, char *fmt, ...)
+int sisocks_snprintf(char *buf, int len, const char *fmt, ...)
 {
    va_list argptr;
    int cnt;
 
    va_start(argptr, fmt);
-   cnt = vsprintf(buf, fmt, argptr);
+   cnt = (len > 0) ? _vsnprintf(buf, len, fmt, argptr) : -1;
    va_end(argptr);
-
+   if (len > 0) buf[len - 1] = '\0';
+   if (cnt < 0) {
+      va_start(argptr, fmt);
+      cnt = _vscprintf(fmt, argptr);
+      va_end(argptr);
+   }
    return(cnt);
 }
 #else
-extern int snprintf(char *buf, int len, char *fmt, ...);
+extern int sisocks_snprintf(char *buf, int len, const char *fmt, ...);
 #endif
+#define snprintf sisocks_snprintf
 #endif
 
 #endif
@@ -122,6 +128,7 @@ FILE *sockerrlog=0;
 
 /* copy error description to buf or set *buf=0 if none */
 int sockerrorchecks(char *buf, int blen, int res) {
+  if (!buf || blen <= 0) return res;
   *buf=0;
   if (res==-1) {
     switch(sockerrno) {
@@ -139,13 +146,10 @@ int sockerrorchecks(char *buf, int blen, int res) {
     case EADDRINUSE: strncpy(buf,"address already in use",blen); break;
     case EINPROGRESS: strncpy(buf,"in progress",blen); break;
     case EALREADY: strncpy(buf,"previous connect request not completed yet",blen); break;
-#ifdef unix
     default: snprintf(buf,blen,"unknown socket error %d",sockerrno);
-#else
-    default: sprintf(buf,"unknown socket error %d",sockerrno);
-#endif
     }
   }
+  buf[blen - 1] = '\0';
   return res;
 }
 

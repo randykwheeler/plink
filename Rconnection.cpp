@@ -30,6 +30,9 @@
 #include "Rconnection.h"
 
 #include <stdio.h>
+#include <limits.h>
+#include <new>
+#include <stdexcept>
 #include "sisocks.h"
 #ifdef unix
 #include <sys/un.h>
@@ -104,13 +107,15 @@ Rmessage::Rmessage(int cmd) {
 
 Rmessage::Rmessage(int cmd, const char *txt) {
     memset(&head,0,sizeof(head));
-    int tl=strlen(txt)+1;
-    if ((tl&3)>0)
-        tl=(tl+4)&0xffffc; // allign the text
+    size_t textlen=strlen(txt);
+    if (textlen > 0xfffffbU)
+        throw std::length_error("Rserve string exceeds short parameter limit");
+    size_t tl=(textlen+4)&~(size_t)3;
     len=tl+4; // message length is tl + 4 (short format only)
     head.cmd=cmd&0x3f;
     head.len=len;
     data=(char*)malloc(tl+16);
+    if (!data) throw std::bad_alloc();
     memset(data,0,tl+16);
     *((int*)data)=itop(SET_PAR(DT_STRING,tl));
     strcpy(data+4,txt);
@@ -259,13 +264,14 @@ Rexp::Rexp(int type, const char *data, int len, Rexp *attr) {
     this->attr=attr; master=this; rcount=0; attribs=0;
     this->type=type;
     this->msg=0;
+    this->data=0;
     if (len>0) {
         this->data=(char*) malloc(len);
         memcpy(this->data, data, len);
         this->len=len;
     } else
         this->len=0;
-    next=(char*)data+this->len;
+    next=this->data ? this->data+this->len : 0;
 }
 
 Rexp::~Rexp() {
@@ -284,7 +290,7 @@ Rexp::~Rexp() {
     }
     if (msg) {
         if (rcount>0)
-            fprintf(stderr, "WARNING! Rexp master %lx delete requested, but %d object(s) are using our memory - refusing to free, leaking...\n", (long)this, rcount);
+            fprintf(stderr, "WARNING! Rexp master %p delete requested, but %d object(s) are using our memory - refusing to free, leaking...\n", (void*)this, rcount);
         else
             delete(msg);
     }
@@ -690,15 +696,21 @@ int Rconnection::shutdown(const char *key) {
 }
 
 int Rconnection::assign(const char *symbol, Rexp *exp) {
-    Rmessage *msg=new Rmessage();
-    Rmessage *cm=new Rmessage(CMD_setSEXP);
-    
-    int tl=strlen(symbol)+1;
-    if (tl&3) tl=(tl+4)&0xfffc;
+    size_t symbol_len=strlen(symbol);
+    if (symbol_len > 0xfffffbU) return CERR_not_supported;
+    Rsize_t tl=(Rsize_t)((symbol_len+4)&~(size_t)3);
     Rsize_t xl=exp->storageSize();
     Rsize_t hl=4+tl+4;
     if (xl>0x7fffff) hl+=4;
-    cm->data=(char*) malloc(hl+xl);
+    if (xl > UINT_MAX-hl) return CERR_out_of_mem;
+    Rmessage *msg=new Rmessage();
+    Rmessage *cm=new Rmessage(CMD_setSEXP);
+    cm->data=(char*) calloc(1, hl+xl);
+    if (!cm->data) {
+        delete cm;
+        delete msg;
+        return CERR_out_of_mem;
+    }
     cm->head.len=cm->len=hl+xl;
     ((unsigned int*)cm->data)[0]=SET_PAR(DT_STRING, tl);
     ((unsigned int*)cm->data)[0]=itop(((unsigned int*)cm->data)[0]);
@@ -716,6 +728,7 @@ int Rconnection::assign(const char *symbol, Rexp *exp) {
         return res;
     }
     // we should check response code here ...
+    delete msg;
     return 0;
 }
 

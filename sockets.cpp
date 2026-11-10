@@ -132,9 +132,19 @@ vector<string> socketConnection( Plink * P,
       if ( retcode < 0 )
 	{
 	  P->printLOG("Problem reading from SNPServer\n");
+#ifdef WIN
+          closesocket(server_s);
+          WSACleanup();
+#endif
+#ifdef UNIX
+          close(server_s);
+#endif
 	  return tokens;
 	}
       
+      if (retcode == 0)
+        break;
+
       echoBuffer[retcode] = '\0';        // Terminate the string!    
       
       all_string += echoBuffer;
@@ -150,8 +160,7 @@ vector<string> socketConnection( Plink * P,
   stringstream ss(all_string); 
   while (ss >> buf)
     tokens.push_back(buf);
-  return tokens;
-    
+
   // Close all open sockets
 #ifdef WIN
   closesocket(server_s);
@@ -163,6 +172,7 @@ vector<string> socketConnection( Plink * P,
 #ifdef WIN
   WSACleanup();
 #endif
+  return tokens;
 
 #endif
 
